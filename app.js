@@ -1,16 +1,15 @@
-const $=id=>document.getElementById(id),key='area-studio-v2',legacyKey='area-studio-v1';
+const $=id=>document.getElementById(id),key='area-studio-v3';
 const defaults={
- land:1000,coverage:60,floors:4,residential:80,cost:0,contingency:10,currency:'LAK',project:'ໂຄງການອາພາດເມັນຂອງຂ້ອຍ',
+ land:1000,coverage:100,floors:1,cost:0,contingency:10,currency:'LAK',project:'ໂຄງການອາພາດເມັນຂອງຂ້ອຍ',
  rooms:[
-  {name:'ສະຕູດິໂອ',area:28,weight:50,enabled:true},
-  {name:'1 ຫ້ອງນອນ',area:45,weight:30,enabled:true},
-  {name:'2 ຫ້ອງນອນ',area:65,weight:20,enabled:true},
-  {name:'3 ຫ້ອງນອນ',area:90,weight:10,enabled:false},
-  {name:'ຫ້ອງນ້ຳ / ພື້ນທີ່ບໍລິການ',area:8,weight:10,enabled:false}
+  {name:'ສະຕູດິໂອ',area:40,quantity:10,enabled:true},
+  {name:'1 ຫ້ອງນອນ',area:80,quantity:5,enabled:true},
+  {name:'2 ຫ້ອງນອນ',area:65,quantity:0,enabled:false},
+  {name:'3 ຫ້ອງນອນ',area:90,quantity:0,enabled:false}
  ],
  commonSpaces:[
-  {name:'Lobby',quantity:1,area:80},
-  {name:'Fitness',quantity:1,area:120},
+  {name:'Fitness',quantity:2,area:100},
+  {name:'Lobby',quantity:0,area:80},
   {name:'ພື້ນທີ່ສ່ວນກາງອື່ນ',quantity:0,area:30}
  ]
 };
@@ -18,32 +17,28 @@ function prepareLayout(){
  const oldCommon=$('common');
  if(oldCommon){
   const label=oldCommon.closest('label');
-  label.innerHTML='ພື້ນທີ່ຢູ່ອາໄສ <span>%</span><input id="residential" step="any" type="number" min="0" max="100" value="80">';
+  label.innerHTML='ພື້ນທີ່ຢູ່ອາໄສ <span>%</span><input id="residential-share" type="number" value="80" readonly aria-label="ພື້ນທີ່ຢູ່ອາໄສ %">';
   const publicLabel=document.createElement('label');
   publicLabel.innerHTML='ພື້ນທີ່ສ່ວນກາງ <span>%</span><input id="public-share" type="number" value="20" readonly aria-label="ພື້ນທີ່ສ່ວນກາງ %">';
   label.after(publicLabel);
   const landArticle=$('land').closest('article');
-  const hint=landArticle.querySelector('.hint');
-  hint.textContent='ພື້ນທີ່ຢູ່ອາໄສ ແລະ ພື້ນທີ່ສ່ວນກາງຈະລວມກັນເປັນ 100% ອັດຕະໂນມັດ.';
+  landArticle.querySelector('.hint').textContent='ເນື້ອທີ່ອາຄານລວມແມ່ນ 100%. ທຸກຫ້ອງຄິດຈາກ ຂະໜາດ × ຈຳນວນ; ສ່ວນທີ່ຍັງເຫຼືອຈະເປັນພື້ນທີ່ສຳຮອງອັດຕະໂນມັດ ເພື່ອໃຫ້ລວມ 100% ພໍດີ.';
  }
  const roomArticle=$('rooms').closest('article');
- roomArticle.querySelector('h2').textContent='ແບ່ງສັດສ່ວນພື້ນທີ່ຢູ່ອາໄສ';
- roomArticle.querySelector('.hint.top').textContent='ກຳນົດ % ຂອງແຕ່ລະ Type ຈາກພື້ນທີ່ຢູ່ອາໄສ. ສັດສ່ວນ Type ທັງໝົດຈະຮັກສາໄວ້ທີ່ 100%.';
- const heads=roomArticle.querySelectorAll('.room-head span');
- if(heads[0])heads[0].textContent='ປະເພດຫ້ອງ';
- if(heads[1])heads[1].textContent='ຂະໜາດ · m²';
- if(heads[2])heads[2].textContent='ສັດສ່ວນຈາກພື້ນທີ່ຢູ່ອາໄສ';
- roomArticle.querySelector('.room-controls span').textContent='ສັດສ່ວນລວມ 100%';
+ roomArticle.querySelector('h2').textContent='ກຳນົດຫ້ອງຈາກພື້ນທີ່ 100%';
+ roomArticle.querySelector('.hint.top').textContent='ຂະໜາດ, ຈຳນວນ ແລະ % ເຊື່ອມກັນ. ປ່ຽນຈຳນວນ ຫຼືຂະໜາດແລ້ວ % ຈະປ່ຽນຕາມ; ປ່ຽນ % ແລ້ວຈຳນວນຈະປັບເປັນຈຳນວນເຕັມທີ່ໃກ້ທີ່ສຸດ.';
+ roomArticle.querySelector('.room-head').innerHTML='<span>ປະເພດຫ້ອງ</span><span>ຂະໜາດ · m²</span><span>ຈຳນວນຫ້ອງ</span><span>ສັດສ່ວນ · %</span>';
+ roomArticle.querySelector('.room-controls span').textContent='ພື້ນທີ່ລວມ = 100%';
  const commonArticle=document.createElement('article');
  commonArticle.id='common-spaces-section';
- commonArticle.innerHTML='<div class="section-title"><span>03</span><h2>ຫ້ອງ ແລະ ພື້ນທີ່ສ່ວນກາງ</h2></div><p class="hint top">ກຳນົດຈຳນວນ ແລະ ຂະໜາດຂອງ Lobby, Fitness ຫຼື ຫ້ອງສ່ວນກາງອື່ນໆ. ລະບົບຈະທຽບກັບພື້ນທີ່ສ່ວນກາງທີ່ມີ.</p><div class="common-head"><span>ລາຍການ</span><span>ຈຳນວນ</span><span>ຂະໜາດ / ຫ້ອງ · m²</span><span></span></div><div id="common-spaces"></div><button id="add-common-space" class="quiet" type="button">+ ເພີ່ມຫ້ອງສ່ວນກາງ</button><div id="common-space-usage" class="common-usage"></div>';
+ commonArticle.innerHTML='<div class="section-title"><span>03</span><h2>ຫ້ອງ ແລະ ພື້ນທີ່ສ່ວນກາງ</h2></div><p class="hint top">Lobby, Fitness ແລະສ່ວນກາງອື່ນໆ ໃຊ້ສູດດຽວກັນ: ຂະໜາດ × ຈຳນວນ = ພື້ນທີ່ ແລະ %. ຕົວຢ່າງ 2 × 100 m² ຈາກ 1,000 m² = 20%.</p><div class="common-head"><span>ລາຍການ</span><span>ຈຳນວນ</span><span>ຂະໜາດ · m²</span><span>ສັດສ່ວນ · %</span><span></span></div><div id="common-spaces"></div><button id="add-common-space" class="quiet" type="button">+ ເພີ່ມຫ້ອງສ່ວນກາງ</button><div id="allocation-status" class="allocation-status"></div>';
  roomArticle.after(commonArticle);
  const costArticle=$('currency').closest('article');
  costArticle.querySelector('.section-title>span').textContent='04';
  const materialArticle=$('material-rows').closest('article');
  materialArticle.querySelector('.section-title>span').textContent='05';
  const notes=document.querySelector('.notes');
- if(notes)notes.innerHTML='<h3>ວິທີຄິດໄລ່</h3><p>ທີ່ດິນ × ອັດຕາການໃຊ້ທີ່ດິນ × ຈຳນວນຊັ້ນ = ເນື້ອທີ່ອາຄານລວມ.<br>ເນື້ອທີ່ລວມ × % ຢູ່ອາໄສ = ພື້ນທີ່ຢູ່ອາໄສ.<br>ພື້ນທີ່ຂອງແຕ່ລະ Type ÷ ຂະໜາດຫ້ອງ = ຈຳນວນຫ້ອງທີ່ fit in.</p><p>ຫ້ອງສ່ວນກາງຄິດຈາກ ຈຳນວນ × ຂະໜາດ. ລະບົບຈະສະແດງພື້ນທີ່ທີ່ເຫຼືອ ຫຼື ພື້ນທີ່ທີ່ເກີນ.</p><p>ຜົນນີ້ແມ່ນການປະເມີນເບື້ອງຕົ້ນຕາມເນື້ອທີ່. ຮູບຮ່າງດິນ, ທາງຍ່າງ, ຂັ້ນໄດ, ລິຟ, ຝາ, ລະບົບອາຄານ ແລະ ຂໍ້ກຳນົດທ້ອງຖິ່ນອາດປ່ຽນຈຳນວນຫ້ອງໄດ້.</p>';
+ if(notes)notes.innerHTML='<h3>ຫຼັກການ 100%</h3><p>ເນື້ອທີ່ຖານອາຄານ × ຈຳນວນຊັ້ນ = ເນື້ອທີ່ລວມ 100%.<br>ຂະໜາດຫ້ອງ × ຈຳນວນ = ພື້ນທີ່ລວມຂອງ Type.<br>% ຂອງ Type = ພື້ນທີ່ Type ÷ ພື້ນທີ່ລວມ × 100.</p><p>ຈຳນວນຫ້ອງຕ້ອງເປັນຈຳນວນເຕັມ. ເມື່ອແກ້ % ລະບົບຈະປັບຈຳນວນຫ້ອງເປັນຄ່າໃກ້ທີ່ສຸດ ແລະຄິດ % ຈິງຄືນໃໝ່. ພື້ນທີ່ທີ່ບໍ່ພໍດີກັບຂະໜາດຫ້ອງຈະຖືກສະແດງເປັນພື້ນທີ່ສຳຮອງ ເຮັດໃຫ້ລວມ 100% ພໍດີສະເໝີ.</p>';
 }
 prepareLayout();
 
@@ -51,28 +46,41 @@ let initial=structuredClone(defaults),last=null;
 try{
  const stored=JSON.parse(localStorage.getItem(key));
  if(stored&&Array.isArray(stored.rooms)&&Array.isArray(stored.commonSpaces))initial={...initial,...stored};
- else{
-  const legacy=JSON.parse(localStorage.getItem(legacyKey));
-  if(legacy&&Array.isArray(legacy.rooms))initial={...initial,...legacy,residential:100-(Number(legacy.common)||0),commonSpaces:structuredClone(defaults.commonSpaces)};
- }
 }catch{}
-let roomData=initial.rooms.map(r=>({...r}));
-let commonData=initial.commonSpaces.map(r=>({...r}));
+let roomData=initial.rooms.map(r=>({...r,quantity:Number.isInteger(r.quantity)?r.quantity:0}));
+let commonData=initial.commonSpaces.map(r=>({...r,quantity:Number.isInteger(r.quantity)?r.quantity:0}));
 const roomName=r=>r.name.trim()||'ຫ້ອງໃໝ່';
-
-function balance(changed=-1){
- const active=roomData.map((r,i)=>i).filter(i=>roomData[i].enabled);
- if(!active.length)return;
- if(active.length===1)roomData[active[0]].weight=100;
- else{
-  if(changed>=0&&active.includes(changed))roomData[changed].weight=Math.round(Math.min(100,Math.max(0,Number(roomData[changed].weight)||0))*10)/10;
-  const targets=changed>=0&&active.includes(changed)?active.filter(i=>i!==changed):active;
-  const available=changed>=0&&active.includes(changed)?1000-Math.round(roomData[changed].weight*10):1000;
-  const total=targets.reduce((sum,i)=>sum+Math.max(0,Number(roomData[i].weight)||0),0);
-  let remaining=available;
-  targets.forEach((i,n)=>{const units=n===targets.length-1?remaining:Math.round((total?Math.max(0,Number(roomData[i].weight)||0)/total:1/targets.length)*available);roomData[i].weight=units/10;remaining-=units;});
+const value=id=>Number($(id)?.value)||0;
+const grossArea=()=>value('land')*value('coverage')/100*Math.max(1,Math.round(value('floors')));
+const roomUsed=()=>roomData.reduce((sum,r)=>sum+(r.enabled?(Number(r.area)||0)*(Number(r.quantity)||0):0),0);
+const commonUsed=()=>commonData.reduce((sum,r)=>sum+(Number(r.area)||0)*(Number(r.quantity)||0),0);
+function otherUsed(kind,index){
+ let total=0;
+ roomData.forEach((r,i)=>{if(r.enabled&&!(kind==='room'&&i===index))total+=(Number(r.area)||0)*(Number(r.quantity)||0);});
+ commonData.forEach((r,i)=>{if(!(kind==='common'&&i===index))total+=(Number(r.area)||0)*(Number(r.quantity)||0);});
+ return total;
+}
+function setQuantity(kind,index,desired){
+ const list=kind==='room'?roomData:commonData,item=list[index],area=Number(item.area)||0,gross=grossArea();
+ const max=area>0?Math.max(0,Math.floor((gross-otherUsed(kind,index)+0.000001)/area)):0;
+ item.quantity=Math.max(0,Math.min(max,Math.round(Number(desired)||0)));
+}
+function setShare(kind,index,share){
+ const list=kind==='room'?roomData:commonData,item=list[index],area=Number(item.area)||0;
+ if(area<=0)return;
+ setQuantity(kind,index,grossArea()*Math.max(0,Math.min(100,Number(share)||0))/100/area);
+}
+function ensureWithinGross(){
+ let over=roomUsed()+commonUsed()-grossArea();
+ if(over<=0)return;
+ for(let i=roomData.length-1;i>=0&&over>0;i--){
+  const r=roomData[i];if(!r.enabled||!r.quantity||!r.area)continue;
+  const remove=Math.min(r.quantity,Math.ceil(over/r.area));r.quantity-=remove;over-=remove*r.area;
  }
- roomData.forEach((r,i)=>{if(!r.enabled)r.weight=0;const field=$('weight'+i);if(field&&document.activeElement!==field)field.value=r.weight;});
+ for(let i=commonData.length-1;i>=0&&over>0;i--){
+  const r=commonData[i];if(!r.quantity||!r.area)continue;
+  const remove=Math.min(r.quantity,Math.ceil(over/r.area));r.quantity-=remove;over-=remove*r.area;
+ }
 }
 function drawRooms(){
  $('rooms').replaceChildren();
@@ -80,16 +88,17 @@ function drawRooms(){
   const row=document.createElement('div');row.className='room-row';
   const label=document.createElement('label'),enabled=document.createElement('input');enabled.type='checkbox';enabled.id='enabled'+i;enabled.checked=r.enabled;label.append(enabled);
   const name=document.createElement('input');name.type='text';name.id='name'+i;name.maxLength=80;name.value=r.name;name.setAttribute('aria-label','ຊື່ປະເພດຫ້ອງ');label.append(name);
-  const area=document.createElement('input');area.type='number';area.min='0.1';area.max='1000000';area.step='0.1';area.id='area'+i;area.value=r.area;area.setAttribute('aria-label',roomName(r)+' ຂະໜາດເປັນ m²');
-  const weight=document.createElement('input');weight.type='number';weight.min='0';weight.max='100';weight.step='0.1';weight.id='weight'+i;weight.value=r.weight;weight.disabled=!r.enabled;weight.setAttribute('aria-label',roomName(r)+' ສັດສ່ວນ %');
-  const group=document.createElement('div');group.className='room-share';group.append(weight);
-  if(i>=defaults.rooms.length){const remove=document.createElement('button');remove.type='button';remove.className='room-remove quiet';remove.textContent='×';remove.title='ລຶບຫ້ອງ';remove.onclick=()=>{roomData.splice(i,1);drawRooms();balance();render();};group.append(remove);}
-  enabled.onchange=()=>{if(!enabled.checked&&roomData.filter(x=>x.enabled).length===1){enabled.checked=true;return;}r.enabled=enabled.checked;r.weight=r.enabled?10:0;drawRooms();balance(r.enabled?i:-1);render();};
+  const area=document.createElement('input');area.type='number';area.min='0.1';area.max='1000000';area.step='0.1';area.id='area'+i;area.value=r.area;area.setAttribute('aria-label',roomName(r)+' ຂະໜາດ m²');
+  const quantity=document.createElement('input');quantity.type='number';quantity.min='0';quantity.max='100000';quantity.step='1';quantity.id='quantity'+i;quantity.value=r.quantity;quantity.disabled=!r.enabled;quantity.setAttribute('aria-label',roomName(r)+' ຈຳນວນ');
+  const share=document.createElement('input');share.type='number';share.min='0';share.max='100';share.step='0.1';share.id='room-share-'+i;share.disabled=!r.enabled;share.setAttribute('aria-label',roomName(r)+' ສັດສ່ວນ %');
+  const group=document.createElement('div');group.className='room-share';group.append(share);
+  if(i>=defaults.rooms.length){const remove=document.createElement('button');remove.type='button';remove.className='room-remove quiet';remove.textContent='×';remove.title='ລຶບຫ້ອງ';remove.onclick=()=>{roomData.splice(i,1);drawRooms();render();};group.append(remove);}
+  enabled.onchange=()=>{r.enabled=enabled.checked;if(!r.enabled)r.quantity=0;drawRooms();render();};
   name.oninput=()=>{r.name=name.value;render();};
-  area.oninput=()=>{r.area=area.value===''?NaN:Number(area.value);render();};
-  weight.onchange=()=>{weight.value=r.weight;};
-  weight.oninput=()=>{r.weight=weight.value===''?0:Number(weight.value);balance(i);render();};
-  row.append(label,area,group);$('rooms').append(row);
+  area.oninput=()=>{r.area=area.value===''?NaN:Number(area.value);setQuantity('room',i,r.quantity);quantity.value=r.quantity;render();};
+  quantity.oninput=()=>{setQuantity('room',i,quantity.value);quantity.value=r.quantity;render();};
+  share.onchange=()=>{setShare('room',i,share.value);quantity.value=r.quantity;render();};
+  row.append(label,area,quantity,group);$('rooms').append(row);
  });
 }
 function drawCommonSpaces(){
@@ -99,82 +108,78 @@ function drawCommonSpaces(){
   const name=document.createElement('input');name.type='text';name.maxLength=80;name.value=item.name;name.setAttribute('aria-label','ຊື່ຫ້ອງສ່ວນກາງ');
   const quantity=document.createElement('input');quantity.type='number';quantity.min='0';quantity.max='10000';quantity.step='1';quantity.value=item.quantity;quantity.setAttribute('aria-label',item.name+' ຈຳນວນ');
   const area=document.createElement('input');area.type='number';area.min='0.1';area.max='1000000';area.step='0.1';area.value=item.area;area.setAttribute('aria-label',item.name+' ຂະໜາດ m²');
+  const share=document.createElement('input');share.type='number';share.min='0';share.max='100';share.step='0.1';share.id='common-share-'+i;share.setAttribute('aria-label',item.name+' ສັດສ່ວນ %');
   const remove=document.createElement('button');remove.type='button';remove.className='common-remove quiet';remove.textContent='×';remove.setAttribute('aria-label','ລຶບ '+item.name);
   name.oninput=()=>{item.name=name.value;render();};
-  quantity.oninput=()=>{item.quantity=quantity.value===''?NaN:Number(quantity.value);render();};
-  area.oninput=()=>{item.area=area.value===''?NaN:Number(area.value);render();};
+  quantity.oninput=()=>{setQuantity('common',i,quantity.value);quantity.value=item.quantity;render();};
+  area.oninput=()=>{item.area=area.value===''?NaN:Number(area.value);setQuantity('common',i,item.quantity);quantity.value=item.quantity;render();};
+  share.onchange=()=>{setShare('common',i,share.value);quantity.value=item.quantity;render();};
   remove.onclick=()=>{commonData.splice(i,1);drawCommonSpaces();render();};
-  row.append(name,quantity,area,remove);$('common-spaces').append(row);
+  row.append(name,quantity,area,share,remove);$('common-spaces').append(row);
  });
 }
 function load(s){
- for(const id of ['land','coverage','floors','residential','cost','contingency','currency','project'])$(id).value=s[id];
- roomData=s.rooms.map(r=>({...r}));
- commonData=(s.commonSpaces||defaults.commonSpaces).map(r=>({...r}));
- drawRooms();drawCommonSpaces();balance();render();
+ for(const id of ['land','coverage','floors','cost','contingency','currency','project'])$(id).value=s[id];
+ roomData=s.rooms.map(r=>({...r}));commonData=(s.commonSpaces||defaults.commonSpaces).map(r=>({...r}));
+ ensureWithinGross();drawRooms();drawCommonSpaces();render();
 }
 function state(){
  const s={};
- for(const id of ['land','coverage','floors','residential','cost','contingency'])s[id]=$(id).value===''?NaN:Number($(id).value);
+ for(const id of ['land','coverage','floors','cost','contingency'])s[id]=$(id).value===''?NaN:Number($(id).value);
  s.currency=$('currency').value;s.project=$('project').value;
  s.rooms=roomData.map(r=>({...r}));s.commonSpaces=commonData.map(r=>({...r}));
  return s;
 }
 const escapeHtml=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const num=v=>new Intl.NumberFormat('lo-LA',{maximumFractionDigits:1}).format(v);
+const num=v=>new Intl.NumberFormat('lo-LA',{maximumFractionDigits:2}).format(v);
 const money=(v,c)=>c+' '+new Intl.NumberFormat('lo-LA',{maximumFractionDigits:c==='LAK'?0:2}).format(v);
-
 function render(){
  try{
+  ensureWithinGross();
   const s=state(),r=calculate(s);last={s,r};
-  $('public-share').value=num(100-s.residential);
+  $('residential-share').value=r.residentialShare.toFixed(2);$('public-share').value=r.commonShare.toFixed(2);
+  r.rows.forEach((row,i)=>{const field=$('room-share-'+i);if(field&&document.activeElement!==field)field.value=row.share.toFixed(2);const q=$('quantity'+i);if(q&&document.activeElement!==q)q.value=row.quantity;});
+  r.commonSpaces.forEach((row,i)=>{const field=$('common-share-'+i);if(field&&document.activeElement!==field)field.value=row.share.toFixed(2);});
   $('error').textContent='';$('export').disabled=false;
-  const usage=$('common-space-usage');
-  usage.classList.toggle('over',r.commonRemaining<0);
-  usage.innerHTML='<span>ພື້ນທີ່ສ່ວນກາງທີ່ມີ <strong>'+num(r.common)+' m²</strong></span><span>ໃຊ້ແລ້ວ <strong>'+num(r.commonUsed)+' m²</strong></span><span>'+(r.commonRemaining>=0?'ຍັງເຫຼືອ ':'ເກີນກຳນົດ ')+'<strong>'+num(Math.abs(r.commonRemaining))+' m²</strong></span>';
+  const status=$('allocation-status');status.classList.toggle('complete',r.reserve<0.001);
+  status.innerHTML='<span><small>ຈັດສັນແລ້ວ</small><strong>'+num(r.allocatedShare)+'%</strong></span><span><small>ພື້ນທີ່ສຳຮອງ</small><strong>'+num(r.reserveShare)+'%</strong></span><span><small>ຜົນລວມ</small><strong>100%</strong></span>';
   const metric=(label,value)=>'<div class="metric"><small>'+label+'</small><strong>'+num(value)+' <span>m²</span></strong></div>';
-  const commonRows=r.commonSpaces.length?r.commonSpaces.map(item=>'<tr><td>'+escapeHtml(item.name)+'</td><td>'+item.quantity+'</td><td>'+num(item.area)+' m²</td><td>'+num(item.total)+' m²</td></tr>').join(''):'<tr><td colspan="4">ຍັງບໍ່ມີລາຍການ</td></tr>';
+  const commonRows=r.commonSpaces.length?r.commonSpaces.map(item=>'<tr><td>'+escapeHtml(item.name)+'</td><td>'+item.quantity+'</td><td>'+num(item.area)+' m²</td><td>'+num(item.share)+'%</td></tr>').join(''):'<tr><td colspan="4">ຍັງບໍ່ມີລາຍການ</td></tr>';
   $('results').innerHTML=
-   '<div class="hero-result"><div class="number">'+num(r.total)+'<span>ຫ້ອງ</span></div><p>ສະເລ່ຍ '+num(r.perFloor)+' ຫ້ອງຕໍ່ຊັ້ນ · '+s.floors+' ຊັ້ນ · ແບ່ງຕາມສັດສ່ວນພື້ນທີ່</p></div>'+
-   '<div class="metrics">'+metric('ເນື້ອທີ່ຖານອາຄານ',r.footprint)+metric('ເນື້ອທີ່ອາຄານລວມ',r.gross)+metric('ພື້ນທີ່ຢູ່ອາໄສ',r.residential)+metric('ພື້ນທີ່ສ່ວນກາງ',r.common)+'</div>'+
-   '<p class="hint" style="color:#bdcdbf">ທີ່ດິນບໍ່ປຸກສ້າງ: '+num(r.open)+' m²</p>'+
-   '<div class="bar"><span style="width:'+s.residential+'%"></span></div><div class="legend"><span>ຢູ່ອາໄສ '+num(s.residential)+'%</span><span>ສ່ວນກາງ '+num(100-s.residential)+'%</span></div>'+
-   '<h3>ການແບ່ງພື້ນທີ່ຢູ່ອາໄສ</h3><table><thead><tr><th>Type / ຂະໜາດ</th><th>ສັດສ່ວນ</th><th>ພື້ນທີ່</th><th>ຫ້ອງ</th></tr></thead><tbody>'+
-   r.rows.map(row=>'<tr><td>'+escapeHtml(row.name)+' · '+num(row.area)+' m²</td><td>'+num(row.share)+'%</td><td>'+num(row.allocation)+' m²</td><td>'+row.count+'</td></tr>').join('')+'</tbody></table>'+
-   '<p class="hint" style="color:#bdcdbf">ພື້ນທີ່ຫ້ອງທີ່ fit in: '+num(r.used)+' m² · ເສດເຫຼືອຈາກການປັດລົງ: '+num(r.unused)+' m²</p>'+
-   '<h3>ຫ້ອງ ແລະ ພື້ນທີ່ສ່ວນກາງ</h3><table><thead><tr><th>ລາຍການ</th><th>ຈຳນວນ</th><th>ຂະໜາດ</th><th>ລວມ</th></tr></thead><tbody>'+commonRows+'</tbody></table>'+
-   '<p class="hint '+(r.commonRemaining<0?'summary-warning':'')+'" style="color:'+(r.commonRemaining<0?'#ffdf9b':'#bdcdbf')+'">'+(r.commonRemaining>=0?'ພື້ນທີ່ສ່ວນກາງຍັງເຫຼືອ: ':'ພື້ນທີ່ສ່ວນກາງເກີນກຳນົດ: ')+num(Math.abs(r.commonRemaining))+' m²</p>'+
-   '<div class="budget"><small>ງົບກໍ່ສ້າງປະເມີນຕາມເນື້ອທີ່</small><strong>'+(s.cost?money(r.budget,s.currency):'ປ້ອນຄ່າກໍ່ສ້າງ / m²')+'</strong><p>ຄ່າກໍ່ສ້າງພື້ນຖານ: '+money(r.base,s.currency)+'</p><p>ງົບສຳຮອງ ('+num(s.contingency)+'%): '+money(r.extra,s.currency)+'</p><p>ລາຄາ × '+num(r.gross)+' m² ເນື້ອທີ່ລວມ + ງົບສຳຮອງ</p>'+(r.total&&s.cost?'<p>ງົບສະເລ່ຍຕໍ່ຫ້ອງຢູ່ອາໄສ: '+money(r.budget/r.total,s.currency)+'</p>':'')+'</div>';
+   '<div class="hero-result"><div class="number">100<span>%</span></div><p>ພື້ນທີ່ລວມ '+num(r.gross)+' m² · ບໍ່ຂາດ ແລະບໍ່ເກີນ</p></div>'+
+   '<div class="metrics">'+metric('ເນື້ອທີ່ຖານອາຄານ',r.footprint)+metric('ເນື້ອທີ່ລວມ 100%',r.gross)+metric('ພື້ນທີ່ຢູ່ອາໄສ',r.residential)+metric('ພື້ນທີ່ສ່ວນກາງ',r.common)+'</div>'+
+   '<div class="allocation-bar"><span class="bar-room" style="width:'+Math.min(100,r.residentialUsed/r.gross*100)+'%"></span><span class="bar-common" style="width:'+r.commonShare+'%"></span><span class="bar-reserve" style="width:'+r.reserveShare+'%"></span></div><div class="legend"><span>ຫ້ອງ '+num(r.residentialUsed/r.gross*100)+'%</span><span>ສ່ວນກາງ '+num(r.commonShare)+'%</span><span>ສຳຮອງ '+num(r.reserveShare)+'%</span></div>'+
+   '<h3>ການແບ່ງຫ້ອງຢູ່ອາໄສ</h3><table><thead><tr><th>Type / ຂະໜາດ</th><th>ຈຳນວນ</th><th>ພື້ນທີ່</th><th>ສັດສ່ວນ</th></tr></thead><tbody>'+
+   r.rows.map(row=>'<tr><td>'+escapeHtml(row.name)+' · '+num(row.area)+' m²</td><td>'+row.quantity+'</td><td>'+num(row.used)+' m²</td><td>'+num(row.share)+'%</td></tr>').join('')+'</tbody></table>'+
+   '<h3>ຫ້ອງ ແລະ ພື້ນທີ່ສ່ວນກາງ</h3><table><thead><tr><th>ລາຍການ</th><th>ຈຳນວນ</th><th>ຂະໜາດ</th><th>ສັດສ່ວນ</th></tr></thead><tbody>'+commonRows+'</tbody></table>'+
+   '<p class="reserve-summary">ພື້ນທີ່ສຳຮອງອັດຕະໂນມັດ: <strong>'+num(r.reserve)+' m² · '+num(r.reserveShare)+'%</strong> — ຜົນລວມສຸດທ້າຍ 100%</p>'+
+   '<div class="budget"><small>ງົບກໍ່ສ້າງປະເມີນຕາມເນື້ອທີ່</small><strong>'+(s.cost?money(r.budget,s.currency):'ປ້ອນຄ່າກໍ່ສ້າງ / m²')+'</strong><p>ຄ່າກໍ່ສ້າງພື້ນຖານ: '+money(r.base,s.currency)+'</p><p>ງົບສຳຮອງ ('+num(s.contingency)+'%): '+money(r.extra,s.currency)+'</p></div>';
   try{localStorage.setItem(key,JSON.stringify(s));$('saved').textContent='ບັນທຶກໃນອຸປະກອນນີ້ແລ້ວ';}catch{$('saved').textContent='ບໍ່ສາມາດບັນທຶກໃນອຸປະກອນນີ້';}
  }catch(e){
-  last=null;$('error').textContent='ກະລຸນາກວດຄ່າພື້ນທີ່, ຈຳນວນ, ຂະໜາດ ແລະສັດສ່ວນໃຫ້ຖືກຕ້ອງ. ສັດສ່ວນ Type ຫ້ອງຕ້ອງລວມ 100%.';
-  $('results').replaceChildren();$('export').disabled=true;
+  last=null;$('error').textContent=e.message||'ກະລຸນາກວດຄ່າຂະໜາດ ແລະຈຳນວນຫ້ອງ.';$('results').replaceChildren();$('export').disabled=true;
  }
 }
 document.addEventListener('input',e=>{if(!e.target.closest('#rooms')&&!e.target.closest('#common-spaces'))render();});
 document.addEventListener('change',e=>{if(!e.target.closest('#rooms')&&!e.target.closest('#common-spaces'))render();});
-$('add-room').onclick=()=>{roomData.push({name:'ຫ້ອງໃໝ່',area:30,weight:10,enabled:true});drawRooms();balance(roomData.length-1);render();$('name'+(roomData.length-1)).focus();};
-$('add-common-space').onclick=()=>{commonData.push({name:'ຫ້ອງສ່ວນກາງໃໝ່',quantity:1,area:30});drawCommonSpaces();render();};
+$('add-room').onclick=()=>{roomData.push({name:'ຫ້ອງໃໝ່',area:30,quantity:0,enabled:true});drawRooms();render();$('name'+(roomData.length-1)).focus();};
+$('add-common-space').onclick=()=>{commonData.push({name:'ຫ້ອງສ່ວນກາງໃໝ່',quantity:0,area:30});drawCommonSpaces();render();};
 $('print').onclick=()=>window.print();
 $('reset').onclick=()=>load(structuredClone(defaults));
 $('export').onclick=()=>{
- if(!last)return;
- const {s,r}=last;
+ if(!last)return;const {s,r}=last;
  const rows=[
-  ['APA STUDIO — ຜົນປະເມີນເບື້ອງຕົ້ນ'],['ໂຄງການ',s.project],['ສະກຸນເງິນ',s.currency],
-  ['ເນື້ອທີ່ດິນ m²',s.land],['ອັດຕາການໃຊ້ທີ່ດິນ %',s.coverage],['ຈຳນວນຊັ້ນ',s.floors],
-  ['ພື້ນທີ່ຢູ່ອາໄສ %',s.residential],['ພື້ນທີ່ສ່ວນກາງ %',100-s.residential],
-  ['ເນື້ອທີ່ອາຄານລວມ m²',r.gross],['ພື້ນທີ່ຢູ່ອາໄສ m²',r.residential],['ພື້ນທີ່ສ່ວນກາງ m²',r.common],
-  ['ຈຳນວນຫ້ອງຢູ່ອາໄສ',r.total],['ພື້ນທີ່ຫ້ອງທີ່ fit in m²',r.used],['ເສດເຫຼືອຈາກການປັດລົງ m²',r.unused],
-  ['ພື້ນທີ່ສ່ວນກາງທີ່ໃຊ້ m²',r.commonUsed],['ພື້ນທີ່ສ່ວນກາງຄົງເຫຼືອ m²',r.commonRemaining],
-  ['ຄ່າກໍ່ສ້າງຕໍ່ m²',s.cost],['ຄ່າກໍ່ສ້າງພື້ນຖານ',r.base],['ງົບສຳຮອງ %',s.contingency],['ງົບກໍ່ສ້າງລວມ',r.budget],[],
-  ['ປະເພດຫ້ອງ','ຂະໜາດ m²','ສັດສ່ວນ %','ພື້ນທີ່ຈັດສັນ m²','ຈຳນວນຫ້ອງ','ພື້ນທີ່ທີ່ໃຊ້ m²'],
-  ...r.rows.map(x=>[x.name,x.area,x.share,x.allocation,x.count,x.used]),[],
-  ['ຫ້ອງສ່ວນກາງ','ຈຳນວນ','ຂະໜາດ / ຫ້ອງ m²','ພື້ນທີ່ລວມ m²'],
-  ...r.commonSpaces.map(x=>[x.name,x.quantity,x.area,x.total])
+  ['APA STUDIO — ຜົນປະເມີນ 100%'],['ໂຄງການ',s.project],['ສະກຸນເງິນ',s.currency],
+  ['ເນື້ອທີ່ດິນ m²',s.land],['ອັດຕາການໃຊ້ທີ່ດິນ %',s.coverage],['ຈຳນວນຊັ້ນ',s.floors],['ເນື້ອທີ່ລວມ m²',r.gross],
+  ['ພື້ນທີ່ຢູ່ອາໄສ %',r.residentialShare],['ພື້ນທີ່ສ່ວນກາງ %',r.commonShare],['ພື້ນທີ່ສຳຮອງ %',r.reserveShare],['ຜົນລວມ %',100],
+  ['ຄ່າກໍ່ສ້າງຕໍ່ m²',s.cost],['ງົບກໍ່ສ້າງລວມ',r.budget],[],
+  ['ປະເພດຫ້ອງ','ຂະໜາດ m²','ຈຳນວນ','ພື້ນທີ່ m²','ສັດສ່ວນ %'],
+  ...r.rows.map(x=>[x.name,x.area,x.quantity,x.used,x.share]),[],
+  ['ຫ້ອງສ່ວນກາງ','ຂະໜາດ m²','ຈຳນວນ','ພື້ນທີ່ m²','ສັດສ່ວນ %'],
+  ...r.commonSpaces.map(x=>[x.name,x.area,x.quantity,x.total,x.share]),[],
+  ['ພື້ນທີ່ສຳຮອງ',r.reserve,'',r.reserve,r.reserveShare]
  ];
  if(window.materialExportRows)rows.push(...window.materialExportRows());
  const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(typeof v==='string'&&/^[=+@\-\t\r]/.test(v)?"'"+v:v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='apa-studio-estimate.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='apa-studio-100-percent.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
 load(initial);
